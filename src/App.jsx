@@ -1,7 +1,8 @@
 /* eslint-disable react/prop-types */
 
 import { createContext, useContext, useState } from "react";
-import { Checkbox } from "@mui/material";
+import { Button, Checkbox } from "@mui/material";
+import { SnackbarProvider, useSnackbar } from "notistack";
 
 function App() {
   const columns = [{ key: "id" }, { key: "name" }, { key: "age" }];
@@ -13,9 +14,11 @@ function App() {
   ];
 
   return (
-    <CheckboxContextProvider>
-      <Table rows={rows} columns={columns} />
-    </CheckboxContextProvider>
+    <SnackbarProvider>
+      <CheckboxContextProvider>
+        <Table rows={rows} columns={columns} />
+      </CheckboxContextProvider>
+    </SnackbarProvider>
   );
 }
 
@@ -23,16 +26,22 @@ function Table({ rows: propsRows, columns }) {
   const [rows, setRows] = useState(propsRows);
   const { isChecked, clearCheckedRows, checkedRows, selectAllRows } =
     useContext(checkboxContext);
-
+  const { enqueueSnackbar } = useSnackbar();
   return (
     <div>
-      <button
+      <Button
         onClick={() => {
           setRows(propsRows.filter(({ id }) => !isChecked(id)));
+          enqueueSnackbar(
+            `Les lignes: ${checkedRows
+              .sort((a, b) => a - b)
+              .join(", ")} ont été supprimées avec succès`,
+            { variant: "success" }
+          );
         }}
       >
         Supprimer
-      </button>
+      </Button>
       <button onClick={clearCheckedRows}>Désélectionner tout</button>
       <table>
         <thead>
