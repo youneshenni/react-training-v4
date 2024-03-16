@@ -1,12 +1,7 @@
 /* eslint-disable react/prop-types */
 
-import {
-  CheckBox,
-  CheckBoxOutlineBlank,
-  IndeterminateCheckBoxOutlined,
-} from "@mui/icons-material";
-import { IconButton } from "@mui/material";
 import { createContext, useContext, useState } from "react";
+import { Checkbox } from "@mui/material";
 
 function App() {
   const columns = [{ key: "id" }, { key: "name" }, { key: "age" }];
@@ -42,22 +37,19 @@ function Table({ rows: propsRows, columns }) {
       <table>
         <thead>
           <th>
-            <IconButton
+            <Checkbox
               color="primary"
-              onClick={() =>
+              onChange={() =>
                 propsRows.every(({ id }) => checkedRows.includes(id))
                   ? clearCheckedRows()
                   : selectAllRows(propsRows.map(({ id }) => id))
               }
-            >
-              {propsRows.every(({ id }) => checkedRows.includes(id)) ? (
-                <CheckBox />
-              ) : checkedRows.length ? (
-                <IndeterminateCheckBoxOutlined />
-              ) : (
-                <CheckBoxOutlineBlank />
-              )}
-            </IconButton>
+              checked={propsRows.every(({ id }) => checkedRows.includes(id))}
+              indeterminate={
+                checkedRows.length &&
+                !propsRows.every(({ id }) => checkedRows.includes(id))
+              }
+            />
           </th>
           {columns.map((column) => (
             <th key={column.key}>{column.key}</th>
@@ -77,7 +69,7 @@ export function TableRow({ row, columns }) {
   return (
     <tr>
       <td>
-        <Checkbox id={row.id} />
+        <CheckboxComponent id={row.id} />
       </td>
       {columns.map((column) => (
         <TableCell key={row.id + column.key}>{row[column.key]}</TableCell>
@@ -90,12 +82,13 @@ export function TableCell({ children }) {
   return <td>{children}</td>;
 }
 
-export function Checkbox({ id }) {
+export function CheckboxComponent({ id }) {
   const { onCheck, isChecked } = useContext(checkboxContext);
   return (
-    <IconButton color="primary" onClick={() => onCheck(id, !isChecked(id))}>
-      {isChecked(id) ? <CheckBox /> : <CheckBoxOutlineBlank />}
-    </IconButton>
+    <Checkbox
+      checked={isChecked(id)}
+      onChange={() => onCheck(id, !isChecked(id))}
+    />
   );
 }
 
