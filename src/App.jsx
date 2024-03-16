@@ -1,5 +1,11 @@
 /* eslint-disable react/prop-types */
 
+import {
+  CheckBox,
+  CheckBoxOutlineBlank,
+  IndeterminateCheckBoxOutlined,
+} from "@mui/icons-material";
+import { IconButton } from "@mui/material";
 import { createContext, useContext, useState } from "react";
 
 function App() {
@@ -20,7 +26,8 @@ function App() {
 
 function Table({ rows: propsRows, columns }) {
   const [rows, setRows] = useState(propsRows);
-  const { isChecked, clearCheckedRows } = useContext(checkboxContext);
+  const { isChecked, clearCheckedRows, checkedRows, selectAllRows } =
+    useContext(checkboxContext);
 
   return (
     <div>
@@ -34,7 +41,24 @@ function Table({ rows: propsRows, columns }) {
       <button onClick={clearCheckedRows}>Désélectionner tout</button>
       <table>
         <thead>
-          <th></th>
+          <th>
+            <IconButton
+              color="primary"
+              onClick={() =>
+                propsRows.every(({ id }) => checkedRows.includes(id))
+                  ? clearCheckedRows()
+                  : selectAllRows(propsRows.map(({ id }) => id))
+              }
+            >
+              {propsRows.every(({ id }) => checkedRows.includes(id)) ? (
+                <CheckBox />
+              ) : checkedRows.length ? (
+                <IndeterminateCheckBoxOutlined />
+              ) : (
+                <CheckBoxOutlineBlank />
+              )}
+            </IconButton>
+          </th>
           {columns.map((column) => (
             <th key={column.key}>{column.key}</th>
           ))}
@@ -69,11 +93,9 @@ export function TableCell({ children }) {
 export function Checkbox({ id }) {
   const { onCheck, isChecked } = useContext(checkboxContext);
   return (
-    <input
-      type="checkbox"
-      onChange={(e) => onCheck(id, e.target.checked)}
-      checked={isChecked(id)}
-    />
+    <IconButton color="primary" onClick={() => onCheck(id, !isChecked(id))}>
+      {isChecked(id) ? <CheckBox /> : <CheckBoxOutlineBlank />}
+    </IconButton>
   );
 }
 
@@ -82,6 +104,7 @@ const checkboxContext = createContext({
   onCheck: () => {},
   isChecked: () => {},
   clearCheckedRows: () => {},
+  selectAllRows: () => {},
 });
 
 function CheckboxContextProvider({ children }) {
@@ -99,6 +122,8 @@ function CheckboxContextProvider({ children }) {
 
   const isChecked = (id) => checkedRows.includes(id);
 
+  const selectAllRows = (rows) => setCheckedRows(rows);
+
   return (
     <checkboxContext.Provider
       value={{
@@ -106,6 +131,7 @@ function CheckboxContextProvider({ children }) {
         onCheck: handleCheck,
         clearCheckedRows,
         isChecked,
+        selectAllRows,
       }}
     >
       {children}
