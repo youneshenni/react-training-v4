@@ -3,8 +3,47 @@
 import { createContext, useContext, useState } from "react";
 import { Button, Checkbox } from "@mui/material";
 import { SnackbarProvider, useSnackbar } from "notistack";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
 
-function App() {
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <Users />,
+  },
+  {
+    path: "/vehicles",
+    element: <Vehicles />,
+  },
+]);
+
+export default function App() {
+  return (
+    <SnackbarProvider>
+      <CheckboxContextProvider>
+        <RouterProvider router={router} />
+      </CheckboxContextProvider>
+    </SnackbarProvider>
+  );
+}
+
+function Vehicles() {
+  const columns = [
+    { key: "id" },
+    { key: "brand" },
+    { key: "model" },
+    { key: "year" },
+  ];
+
+  const rows = [
+    { id: 1, brand: "Toyota", model: "Corolla", year: 2021 },
+    { id: 2, brand: "Honda", model: "Civic", year: 2020 },
+    { id: 3, brand: "Ford", model: "Fiesta", year: 2019 },
+  ];
+
+  return <Table rows={rows} columns={columns} />;
+}
+
+function Users() {
   const columns = [{ key: "id" }, { key: "name" }, { key: "age" }];
 
   const rows = [
@@ -13,13 +52,7 @@ function App() {
     { id: 3, name: "Jane", age: 25 },
   ];
 
-  return (
-    <SnackbarProvider>
-      <CheckboxContextProvider>
-        <Table rows={rows} columns={columns} />
-      </CheckboxContextProvider>
-    </SnackbarProvider>
-  );
+  return <Table rows={rows} columns={columns} />;
 }
 
 function Table({ rows: propsRows, columns }) {
@@ -30,6 +63,7 @@ function Table({ rows: propsRows, columns }) {
   return (
     <div>
       <Button
+        variant="contained"
         onClick={() => {
           setRows(propsRows.filter(({ id }) => !isChecked(id)));
           enqueueSnackbar(
@@ -42,7 +76,9 @@ function Table({ rows: propsRows, columns }) {
       >
         Supprimer
       </Button>
-      <button onClick={clearCheckedRows}>Désélectionner tout</button>
+      <Button variant="contained" color="secondary" onClick={clearCheckedRows}>
+        Désélectionner tout
+      </Button>
       <table>
         <thead>
           <th>
@@ -140,5 +176,3 @@ function CheckboxContextProvider({ children }) {
     </checkboxContext.Provider>
   );
 }
-
-export default App;
