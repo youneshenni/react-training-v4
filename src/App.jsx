@@ -1,20 +1,53 @@
 /* eslint-disable react/prop-types */
 
 import { createContext, useContext, useState } from "react";
-import { Button, Checkbox } from "@mui/material";
+import { Checkbox, Tabs, Tab, IconButton } from "@mui/material";
 import { SnackbarProvider, useSnackbar } from "notistack";
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import {
+  createBrowserRouter,
+  RouterProvider,
+  Outlet,
+  useLocation,
+  useNavigate,
+} from "react-router-dom";
+import { Delete } from "@mui/icons-material";
 
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <Users />,
-  },
-  {
-    path: "/vehicles",
-    element: <Vehicles />,
+    element: <NavigationOutlet />,
+    children: [
+      {
+        path: "/",
+        element: <Users />,
+      },
+      {
+        path: "/vehicles",
+        element: <Vehicles />,
+      },
+    ],
   },
 ]);
+
+export function NavigationOutlet() {
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  return (
+    <>
+      <Tabs
+        value={location.pathname}
+        onChange={(e, target) => navigate(target)}
+        aria-label="basic tabs example"
+        sx={{ marginBottom: 2 }}
+      >
+        <Tab label="Utilisateurs" value="/" />
+        <Tab label="Véhicules" value="/vehicles" />
+      </Tabs>
+      <Outlet />
+    </>
+  );
+}
 
 export default function App() {
   return (
@@ -62,7 +95,8 @@ function Table({ rows: propsRows, columns }) {
   const { enqueueSnackbar } = useSnackbar();
   return (
     <div>
-      <Button
+      <IconButton
+        color="primary"
         variant="contained"
         onClick={() => {
           setRows(propsRows.filter(({ id }) => !isChecked(id)));
@@ -74,11 +108,8 @@ function Table({ rows: propsRows, columns }) {
           );
         }}
       >
-        Supprimer
-      </Button>
-      <Button variant="contained" color="secondary" onClick={clearCheckedRows}>
-        Désélectionner tout
-      </Button>
+        <Delete />
+      </IconButton>
       <table>
         <thead>
           <th>
