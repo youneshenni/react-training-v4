@@ -1,6 +1,6 @@
 /* eslint-disable react/prop-types */
 
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import { Checkbox, Tabs, Tab, IconButton } from "@mui/material";
 import { SnackbarProvider, useSnackbar } from "notistack";
 import {
@@ -77,18 +77,25 @@ function Vehicles() {
 }
 
 function Users() {
-  const columns = [{ key: "id" }, { key: "name" }, { key: "age" }];
+  const [rows, setUsers] = useState([]);
+  const columns = Object.keys(rows[0] || {}).map((key) => ({ key }));
 
-  const rows = [
-    { id: 1, name: "John", age: 20 },
-    { id: 2, name: "Doe", age: 30 },
-    { id: 3, name: "Jane", age: 25 },
-  ];
+  useEffect(() => {
+    fetch("/api/users")
+      .then((res) => res.json())
+      .then((data) => setUsers(data));
+    return () => console.log("Cleanup");
+  }, []);
 
   return <Table rows={rows} columns={columns} />;
 }
 
 function Table({ rows: propsRows, columns }) {
+  useEffect(() => {
+    setRows(propsRows);
+    localStorage.setItem("rows", JSON.stringify(propsRows));
+    return () => localStorage.removeItem("rows");
+  }, [propsRows]);
   const [rows, setRows] = useState(propsRows);
   const { isChecked, clearCheckedRows, checkedRows, selectAllRows } =
     useContext(checkboxContext);
