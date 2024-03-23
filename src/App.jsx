@@ -1,6 +1,6 @@
 /* eslint-disable react/prop-types */
 
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { Checkbox, Tabs, Tab, IconButton } from "@mui/material";
 import { SnackbarProvider, useSnackbar } from "notistack";
 import {
@@ -77,9 +77,13 @@ function Vehicles() {
 }
 
 function Users() {
+  const TableWithUsers = withUsers(Table);
+  return <TableWithUsers rayane={"Rayane"} />;
+}
+
+function withUsers(Component) {
   const [rows, setUsers] = useState([]);
   const columns = Object.keys(rows[0] || {}).map((key) => ({ key }));
-
   useEffect(() => {
     fetch("/api/users")
       .then((res) => res.json())
@@ -87,10 +91,13 @@ function Users() {
     return () => console.log("Cleanup");
   }, []);
 
-  return <Table rows={rows} columns={columns} />;
+  function MyCreatedComponent(props) {
+    return <Component {...props} rows={rows} columns={columns} />;
+  }
+  return MyCreatedComponent;
 }
 
-function Table({ rows: propsRows, columns }) {
+function Table({ rows: propsRows, columns, rayane }) {
   useEffect(() => {
     setRows(propsRows);
     localStorage.setItem("rows", JSON.stringify(propsRows));
@@ -102,6 +109,7 @@ function Table({ rows: propsRows, columns }) {
   const { enqueueSnackbar } = useSnackbar();
   return (
     <div>
+      <p>{rayane}</p>
       <IconButton
         color="primary"
         variant="contained"
@@ -119,24 +127,28 @@ function Table({ rows: propsRows, columns }) {
       </IconButton>
       <table>
         <thead>
-          <th>
-            <Checkbox
-              color="primary"
-              onChange={() =>
-                propsRows.every(({ id }) => checkedRows.includes(id))
-                  ? clearCheckedRows()
-                  : selectAllRows(propsRows.map(({ id }) => id))
-              }
-              checked={propsRows.every(({ id }) => checkedRows.includes(id))}
-              indeterminate={
-                checkedRows.length &&
-                !propsRows.every(({ id }) => checkedRows.includes(id))
-              }
-            />
-          </th>
-          {columns.map((column) => (
-            <th key={column.key}>{column.key}</th>
-          ))}
+          <tr>
+            <th>
+              <Checkbox
+                color="primary"
+                onChange={() =>
+                  propsRows.every(({ id }) => checkedRows.includes(id))
+                    ? clearCheckedRows()
+                    : selectAllRows(propsRows.map(({ id }) => id))
+                }
+                checked={propsRows.every(({ id }) => checkedRows.includes(id))}
+                indeterminate={
+                  checkedRows.length &&
+                  !propsRows.every(({ id }) => checkedRows.includes(id))
+                    ? true
+                    : false
+                }
+              />
+            </th>
+            {columns.map((column) => (
+              <th key={column.key}>{column.key}</th>
+            ))}
+          </tr>
         </thead>
         <tbody>
           {rows.map((row) => (
@@ -167,11 +179,14 @@ export function TableCell({ children }) {
 
 export function CheckboxComponent({ id }) {
   const { onCheck, isChecked } = useContext(checkboxContext);
-  return (
-    <Checkbox
-      checked={isChecked(id)}
-      onChange={() => onCheck(id, !isChecked(id))}
-    />
+  return useMemo(
+    () => (
+      <Checkbox
+        checked={isChecked(parseInt(id))}
+        onChange={() => onCheck(id, !isChecked(parseInt(id)))}
+      />
+    ),
+    [isChecked(id), id]
   );
 }
 
