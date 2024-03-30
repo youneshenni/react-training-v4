@@ -1,7 +1,22 @@
 /* eslint-disable react/prop-types */
 
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { Checkbox, Tabs, Tab, IconButton } from "@mui/material";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  createRef,
+  useRef,
+} from "react";
+import {
+  Checkbox,
+  Tabs,
+  Tab,
+  IconButton,
+  TextField,
+  Button,
+} from "@mui/material";
 import { SnackbarProvider, useSnackbar } from "notistack";
 import {
   createBrowserRouter,
@@ -97,7 +112,8 @@ function withUsers(Component) {
   return MyCreatedComponent;
 }
 
-function Table({ rows: propsRows, columns, rayane }) {
+function Table({ rows: propsRows, columns }) {
+  const inputRefs = columns.map(() => createRef());
   useEffect(() => {
     setRows(propsRows);
     localStorage.setItem("rows", JSON.stringify(propsRows));
@@ -107,9 +123,36 @@ function Table({ rows: propsRows, columns, rayane }) {
   const { isChecked, clearCheckedRows, checkedRows, selectAllRows } =
     useContext(checkboxContext);
   const { enqueueSnackbar } = useSnackbar();
+
   return (
     <div>
-      <p>{rayane}</p>
+      {columns.map(({ key }, index) => (
+        <TextField
+          key={key}
+          label={key}
+          inputProps={{ ref: inputRefs[index] }}
+        />
+      ))}
+      <Button
+        onClick={() => {
+          setRows((rows) => [
+            inputRefs
+              .map((ref) => ref.current.value)
+              .reduce(
+                // (acc, curr, i) => ({ ...acc, [columns[i].key]: curr }), // -- THIS IS BETTER
+                (acc, curr, i) => {
+                  acc[columns[i].key] = curr;
+                  return acc;
+                },
+                {}
+              ),
+            ...rows,
+          ]);
+          inputRefs.map((ref) => (ref.current.value = ""));
+        }}
+      >
+        Ajouter
+      </Button>
       <IconButton
         color="primary"
         variant="contained"
