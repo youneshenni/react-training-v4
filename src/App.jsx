@@ -113,42 +113,38 @@ function withUsers(Component) {
 }
 
 function Table({ rows: propsRows, columns }) {
-  const inputRefs = columns.map(() => createRef());
   useEffect(() => {
     setRows(propsRows);
     localStorage.setItem("rows", JSON.stringify(propsRows));
     return () => localStorage.removeItem("rows");
   }, [propsRows]);
   const [rows, setRows] = useState(propsRows);
+  const columnKeys = columns.map(({ key }) => key);
+  const emptyInputs = columnKeys.reduce(
+    (acc, key) => ({ ...acc, [key]: "" }),
+    {}
+  );
+  const [inputs, setInputs] = useState(emptyInputs);
   const { isChecked, clearCheckedRows, checkedRows, selectAllRows } =
     useContext(checkboxContext);
   const { enqueueSnackbar } = useSnackbar();
 
+  console.log(inputs);
+
   return (
     <div>
-      {columns.map(({ key }, index) => (
+      {columns.map(({ key }) => (
         <TextField
           key={key}
           label={key}
-          inputProps={{ ref: inputRefs[index] }}
+          value={inputs[key]}
+          onChange={(e) => setInputs({ ...inputs, [key]: e.target.value })}
         />
       ))}
       <Button
         onClick={() => {
-          setRows((rows) => [
-            inputRefs
-              .map((ref) => ref.current.value)
-              .reduce(
-                // (acc, curr, i) => ({ ...acc, [columns[i].key]: curr }), // -- THIS IS BETTER
-                (acc, curr, i) => {
-                  acc[columns[i].key] = curr;
-                  return acc;
-                },
-                {}
-              ),
-            ...rows,
-          ]);
-          inputRefs.map((ref) => (ref.current.value = ""));
+          setRows([...rows, inputs]); //Rayane "oldRows"
+          setInputs(emptyInputs);
         }}
       >
         Ajouter
@@ -168,37 +164,44 @@ function Table({ rows: propsRows, columns }) {
       >
         <Delete />
       </IconButton>
-      <table>
-        <thead>
-          <tr>
-            <th>
-              <Checkbox
-                color="primary"
-                onChange={() =>
-                  propsRows.every(({ id }) => checkedRows.includes(id))
-                    ? clearCheckedRows()
-                    : selectAllRows(propsRows.map(({ id }) => id))
-                }
-                checked={propsRows.every(({ id }) => checkedRows.includes(id))}
-                indeterminate={
-                  checkedRows.length &&
-                  !propsRows.every(({ id }) => checkedRows.includes(id))
-                    ? true
-                    : false
-                }
-              />
-            </th>
-            {columns.map((column) => (
-              <th key={column.key}>{column.key}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row) => (
-            <TableRow row={row} columns={columns} key={row.id} />
-          ))}
-        </tbody>
-      </table>
+      {useMemo(
+        () => (
+          <table>
+            <thead>
+              <tr>
+                <th>
+                  <Checkbox
+                    color="primary"
+                    onChange={() =>
+                      propsRows.every(({ id }) => checkedRows.includes(id))
+                        ? clearCheckedRows()
+                        : selectAllRows(propsRows.map(({ id }) => id))
+                    }
+                    checked={propsRows.every(({ id }) =>
+                      checkedRows.includes(id)
+                    )}
+                    indeterminate={
+                      checkedRows.length &&
+                      !propsRows.every(({ id }) => checkedRows.includes(id))
+                        ? true
+                        : false
+                    }
+                  />
+                </th>
+                {columns.map((column) => (
+                  <th key={column.key}>{column.key}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row) => (
+                <TableRow row={row} columns={columns} key={row.id} />
+              ))}
+            </tbody>
+          </table>
+        ),
+        [rows, columns]
+      )}
     </div>
   );
 }
